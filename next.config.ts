@@ -13,7 +13,13 @@ const withPWA = withPWAInit({
 });
 
 const nextConfig: NextConfig = {
-  /* Your existing config options here */
+  experimental: {
+    // @ts-ignore - Turbo property exists at runtime in Next 16 but may fail strict typing
+    turbo: {},
+  } as any, 
+  webpack: (config) => {
+    return config;
+  },
 };
 
 export default withPWA(nextConfig);
