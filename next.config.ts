@@ -13,10 +13,11 @@ const withPWA = withPWAInit({
 });
 
 const nextConfig: NextConfig = {
-  experimental: {
-    // @ts-ignore - Turbo property exists at runtime in Next 16 but may fail strict typing
-    turbo: {},
-  } as any, 
+  // 1. Move from experimental to top-level for Next 16
+  // @ts-ignore
+  turbopack: {}, 
+  
+  // 2. Keep the webpack explicit return
   webpack: (config) => {
     return config;
   },
