@@ -7,20 +7,11 @@ const withPWA = withPWAInit({
   aggressiveFrontEndNavCaching: true,
   reloadOnOnline: true,
   disable: process.env.NODE_ENV === "development",
-  workboxOptions: {
-    disableDevLogs: true,
-  },
 });
 
 const nextConfig: NextConfig = {
-  // 1. Move from experimental to top-level for Next 16
-  // @ts-ignore
-  turbopack: {}, 
-  
-  // 2. Keep the webpack explicit return
-  webpack: (config) => {
-    return config;
-  },
+  // No experimental or turbopack keys needed here 
+  // if we use the --webpack flag in package.json
 };
 
 export default withPWA(nextConfig);
