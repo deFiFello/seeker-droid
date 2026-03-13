@@ -10,8 +10,14 @@ const withPWA = withPWAInit({
 });
 
 const nextConfig: NextConfig = {
-  // No experimental or turbopack keys needed here 
-  // if we use the --webpack flag in package.json
+  // This satisfies the error message's request for an empty turbopack config
+  // while allowing the PWA webpack plugins to run.
+  experimental: {
+    turbo: {},
+  } as any,
+  webpack: (config) => {
+    return config;
+  },
 };
 
 export default withPWA(nextConfig);
