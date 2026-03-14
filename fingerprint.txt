@@ -1,0 +1,26 @@
+Alias name: android
+Creation date: Mar. 13, 2026
+Entry type: PrivateKeyEntry
+Certificate chain length: 1
+Certificate[1]:
+Owner: CN=Chris Hull, OU=Software Dev, O=Althelia Technologies, L=MTL, ST=QC, C=CA
+Issuer: CN=Chris Hull, OU=Software Dev, O=Althelia Technologies, L=MTL, ST=QC, C=CA
+Serial number: 86019a95af778001
+Valid from: Fri Mar 13 20:19:55 EDT 2026 until: Tue Jul 29 20:19:55 EDT 2053
+Certificate fingerprints:
+	 SHA1: DD:B2:7E:86:4B:46:B2:48:47:44:28:00:DA:F2:08:37:C1:97:F5:C5
+	 SHA256: D1:90:63:42:A2:54:AB:8C:0E:6C:61:79:5B:A8:7D:9C:E4:EC:4D:10:50:A9:53:D8:20:20:5F:18:E4:6E:91:95
+Signature algorithm name: SHA256withRSA
+Subject Public Key Algorithm: 2048-bit RSA key
+Version: 3
+
+Extensions: 
+
+#1: ObjectId: 2.5.29.14 Criticality=false
+SubjectKeyIdentifier [
+KeyIdentifier [
+0000: D9 90 9E 37 66 2F B0 6F   86 5B 83 66 80 38 F6 E7  ...7f/.o.[.f.8..
+0010: 88 5C 67 21                                        .\g!
+]
+]
+
