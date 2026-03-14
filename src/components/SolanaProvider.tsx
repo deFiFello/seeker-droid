@@ -15,8 +15,8 @@ import {
 import '@solana/wallet-adapter-react-ui/styles.css';
 
 export function SolanaProvider({ children }: { children: ReactNode }) {
-    // 1. Force Devnet for testing (ensure your wallet is ALSO on devnet)
-    const network = WalletAdapterNetwork.Devnet; 
+    // SWITCHED TO MAINNET
+    const network = WalletAdapterNetwork.Mainnet; 
     const endpoint = useMemo(() => clusterApiUrl(network), [network]);
 
     const wallets = useMemo(
@@ -25,12 +25,11 @@ export function SolanaProvider({ children }: { children: ReactNode }) {
                 addressSelector: createDefaultAddressSelector(),
                 appIdentity: {
                     name: 'SeekerDroid',
-                    uri: 'https://seeker-droid.vercel.app', // MUST match your Vercel URL
-                    icon: 'favicon.ico', // Relative to the URI
+                    uri: 'https://seeker-droid.vercel.app',
+                    icon: 'https://seeker-droid.vercel.app/favicon.ico', 
                 },
-                // 2. THIS IS THE FIX: Explicitly tell MWA to save the connection in LocalStorage
                 authorizationResultCache: createDefaultAuthorizationResultCache(),
-                cluster: 'devnet',
+                cluster: 'mainnet-beta', // Must match network
                 onWalletNotFound: createDefaultWalletNotFoundHandler(),
             }),
         ],
@@ -39,8 +38,7 @@ export function SolanaProvider({ children }: { children: ReactNode }) {
 
     return (
         <ConnectionProvider endpoint={endpoint}>
-            {/* 3. autoConnect is essential for MWA to pick up the session on redirect */}
-            <WalletProvider wallets={wallets} autoConnect={true}>
+            <WalletProvider wallets={wallets} autoConnect>
                 <WalletModalProvider>{children}</WalletModalProvider>
             </WalletProvider>
         </ConnectionProvider>
