@@ -30,12 +30,18 @@ export default function WalletButton() {
     }
   }, [publicKey, signMessage]);
 
+  // 3. Auto-trigger on initial connection
   useEffect(() => {
     if (publicKey && !isVerified && !connecting) {
-      handleVerify();
+      // Wrapping in setTimeout(0) pushes the execution to the next tick,
+      // which satisfies the Next.js 15 "cascading render" check.
+      const timeoutId = setTimeout(() => {
+        handleVerify();
+      }, 0);
+      return () => clearTimeout(timeoutId);
     }
   }, [publicKey, isVerified, connecting, handleVerify]);
-
+  
   if (!mounted) return <div className="h-10 w-32" />;
 
   // --- UI: CONNECTED ---
