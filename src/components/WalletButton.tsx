@@ -17,36 +17,30 @@ export default function WalletButton() {
     setMounted(true);
   }, []);
 
-  // Trigger verification as soon as the wallet connects
-  useEffect(() => {
-    if (publicKey && !isVerified && signMessage) {
-      const autoVerify = async () => {
-        try {
-          const message = new TextEncoder().encode(`Verify Seeker: ${new Date().getTime()}`);
-          const signature = await signMessage(message);
-          setIsVerified(true);
-          console.log('Hardware Verified:', bs58.encode(signature));
-        } catch (e) {
-          console.error('Verification skipped or failed', e);
-        }
-      };
-      autoVerify();
+  const handleVerify = async () => {
+    if (!publicKey || !signMessage) return;
+    try {
+      const message = new TextEncoder().encode(`Verify Seeker: ${new Date().getTime()}`);
+      const signature = await signMessage(message);
+      setIsVerified(true);
+      console.log('Verified:', bs58.encode(signature));
+    } catch (e) {
+      console.error(e);
+      disconnect(); // If they cancel verification, clear the state
     }
-  }, [publicKey, isVerified, signMessage]);
+  };
 
   if (!mounted) return <div className="h-10 w-32" />;
 
-  // One simple button: Connected or Disconnected
+  // ONE BUTTON: If connected, show address. 
+  // Click once to Verify (Biometrics), click again to Disconnect.
   if (publicKey) {
     return (
       <button 
-        onClick={() => {
-          disconnect();
-          setIsVerified(false);
-        }}
-        className="bg-zinc-900 border border-emerald-500/50 px-6 py-2 rounded-full text-sm text-emerald-400 font-mono shadow-[0_0_10px_rgba(16,185,129,0.1)]"
+        onClick={!isVerified ? handleVerify : () => { disconnect(); setIsVerified(false); }}
+        className="bg-zinc-900 border border-emerald-500/50 px-6 py-2 rounded-full text-sm text-emerald-400 font-mono shadow-[0_0_10px_rgba(16,185,129,0.1)] transition-all"
       >
-        {publicKey.toBase58().slice(0, 4)}...{publicKey.toBase58().slice(-4)} {isVerified ? '✓' : ''}
+        {publicKey.toBase58().slice(0, 4)}...{publicKey.toBase58().slice(-4)} {isVerified ? '✓' : '(Verify)'}
       </button>
     );
   }
