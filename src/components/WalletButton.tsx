@@ -2,17 +2,29 @@
 
 import { useWallet } from '@solana/wallet-adapter-react';
 import { Drawer } from 'vaul';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 export default function WalletButton() {
-  const { publicKey, disconnect, connecting, wallets, select } = useWallet();
+  const { publicKey, disconnect, connecting, wallets, select, wallet } = useWallet();
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
 
+  // 1. Linter-proof mounting
   useEffect(() => {
     const timer = setTimeout(() => setMounted(true), 0);
     return () => clearTimeout(timer);
   }, []);
+
+  // 2. MOBILE SYNC FIX: Listen for window focus
+  // On Seeker/Android, the app "pauses" when the wallet opens. 
+  // This forces a state check when the user comes back to the browser.
+  const [, updateState] = useState({});
+  const forceUpdate = useCallback(() => updateState({}), []);
+
+  useEffect(() => {
+    window.addEventListener('focus', forceUpdate);
+    return () => window.removeEventListener('focus', forceUpdate);
+  }, [forceUpdate]);
 
   const formatAddress = (addr: string) => `${addr.slice(0, 4)}...${addr.slice(-4)}`;
 
@@ -22,13 +34,14 @@ export default function WalletButton() {
     </button>
   );
 
+  // If connected, show the address and status pulse
   if (publicKey) {
     return (
       <button 
         onClick={() => disconnect()}
         className="bg-zinc-900 border border-zinc-800 px-4 py-2 rounded-full text-sm font-medium text-white flex items-center gap-2 hover:bg-zinc-800 transition-colors"
       >
-        <div className="w-2 h-2 bg-[#14F195] rounded-full shadow-[0_0_8px_#14F195]" />
+        <div className="w-2 h-2 bg-[#14F195] rounded-full shadow-[0_0_8px_#14F195] animate-pulse" />
         {formatAddress(publicKey.toBase58())}
       </button>
     );
@@ -37,8 +50,13 @@ export default function WalletButton() {
   return (
     <Drawer.Root open={open} onOpenChange={setOpen}>
       <Drawer.Trigger asChild>
-        <button className="bg-[#14F195] text-black px-6 py-2 rounded-full text-sm font-black uppercase tracking-tight hover:scale-95 transition-transform">
-          {connecting ? 'Connecting...' : 'Connect Wallet'}
+        <button className="bg-[#14F195] text-black px-6 py-2 rounded-full text-sm font-black uppercase tracking-tight hover:scale-95 transition-transform active:scale-90">
+          {connecting ? (
+            <span className="flex items-center gap-2">
+               <div className="w-3 h-3 border-2 border-black/20 border-t-black rounded-full animate-spin" />
+               Connecting...
+            </span>
+          ) : 'Connect Wallet'}
         </button>
       </Drawer.Trigger>
       <Drawer.Portal>
@@ -56,7 +74,7 @@ export default function WalletButton() {
                   .map((w) => (
                   <button
                     key={w.adapter.name}
-                    className="flex items-center justify-between p-4 bg-zinc-900 border border-zinc-800/50 hover:border-[#14F195]/50 rounded-2xl transition-all group"
+                    className="flex items-center justify-between p-4 bg-zinc-900 border border-zinc-800/50 hover:border-[#14F195]/50 rounded-2xl transition-all group active:scale-98"
                     onClick={() => {
                       select(w.adapter.name);
                       setOpen(false);
