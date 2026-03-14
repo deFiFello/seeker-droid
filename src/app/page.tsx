@@ -6,17 +6,19 @@ import WalletButton from "@/components/WalletButton";
 export default function Home() {
   const [mounted, setMounted] = useState(false);
 
-  // Fixes the "WalletContext" build error by ensuring 
-  // wallet logic only runs in the browser.
   useEffect(() => {
+    // This is a standard pattern for PWAs to avoid hydration mismatch
     setMounted(true);
   }, []);
 
-  if (!mounted) return null;
+  // Return a stable black screen while mounting to prevent "flicker" 
+  // and satisfy Next.js server-side rendering
+  if (!mounted) {
+    return <main className="min-h-screen bg-black" />;
+  }
 
   return (
     <main className="min-h-screen bg-black text-white flex flex-col items-center justify-between p-6 pb-[env(safe-area-inset-bottom)] pt-[env(safe-area-inset-top)] overflow-hidden">
-      {/* Header */}
       <nav className="w-full flex justify-between items-center z-10">
         <h1 className="text-xl font-black tracking-tighter italic uppercase">
           Seeker<span className="text-[#14F195]">Droid</span>
@@ -24,11 +26,8 @@ export default function Home() {
         <WalletButton />
       </nav>
 
-      {/* Hero Section */}
       <section className="relative text-center space-y-4 py-10">
-        {/* Subtle background glow for that "Pro" feel */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-[#14F195]/10 blur-[100px] -z-10" />
-        
         <h2 className="text-6xl font-black tracking-tighter leading-[0.9]">
           SOLANA <br />
           <span className="text-zinc-600">MEETS</span> <br />
@@ -40,7 +39,6 @@ export default function Home() {
         </p>
       </section>
 
-      {/* Hardware-Style Status Card */}
       <footer className="w-full max-w-sm bg-zinc-900/40 border border-zinc-800/50 p-5 rounded-[2.5rem] backdrop-blur-xl mb-4">
         <div className="flex flex-col gap-4">
           <div>
@@ -53,9 +51,7 @@ export default function Home() {
               <span className="text-[11px] font-bold text-zinc-200 uppercase tracking-widest">MWA Provider Initialized</span>
             </div>
           </div>
-          
           <div className="h-[1px] w-full bg-gradient-to-r from-transparent via-zinc-800 to-transparent" />
-          
           <div className="flex justify-between items-end">
             <div>
               <p className="text-[10px] text-zinc-600 uppercase font-bold tracking-[0.2em] mb-1">Environment</p>

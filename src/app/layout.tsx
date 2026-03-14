@@ -3,18 +3,14 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { SolanaProvider } from "@/components/SolanaProvider";
 
-const inter = Inter({
-  subsets: ["latin"],
-  display: "swap",
-});
+const inter = Inter({ subsets: ["latin"], display: "swap" });
 
 export const metadata: Metadata = {
   title: "SeekerDroid",
   description: "Gold-standard Solana Seeker PWA template",
-  manifest: "/manifest.json", // Ensures the PWA is discoverable
+  manifest: "/manifest.json",
 };
 
-// Essential for mobile: Prevents accidental zooming on input focus
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
@@ -23,17 +19,11 @@ export const viewport: Viewport = {
   themeColor: "#000000",
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <body className={`${inter.className} antialiased bg-black text-white`}>
-        <SolanaProvider>
-          {children}
-        </SolanaProvider>
+        <SolanaProvider>{children}</SolanaProvider>
       </body>
     </html>
   );

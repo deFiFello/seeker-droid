@@ -12,10 +12,10 @@ import {
     createDefaultWalletNotFoundHandler 
 } from '@solana-mobile/wallet-adapter-mobile';
 
-// Import the default styles for the modal
 import '@solana/wallet-adapter-react-ui/styles.css';
 
-export default function SolanaProvider({ children }: { children: ReactNode }) {
+// Changed to a named export to match your Layout import
+export function SolanaProvider({ children }: { children: ReactNode }) {
     const network = WalletAdapterNetwork.Devnet; 
     const endpoint = useMemo(() => clusterApiUrl(network), [network]);
 
@@ -25,8 +25,8 @@ export default function SolanaProvider({ children }: { children: ReactNode }) {
                 addressSelector: createDefaultAddressSelector(),
                 appIdentity: {
                     name: 'SeekerDroid',
-                    uri: 'https://seeker-droid.vercel.app', // Update this once you have your Vercel URL
-                    icon: 'favicon.ico',
+                    uri: 'https://seeker-droid.vercel.app',
+                    icon: 'https://seeker-droid.vercel.app/favicon.ico', // Use full URL for MWA
                 },
                 authorizationResultCache: createDefaultAuthorizationResultCache(),
                 cluster: 'devnet',
