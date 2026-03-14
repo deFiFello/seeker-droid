@@ -11,11 +11,11 @@ export default function WalletButton() {
   const [open, setOpen] = useState(false);
   const [isVerified, setIsVerified] = useState(false);
 
-  // --- HYDRATION FIX FOR NEXT 15 ---
+  // --- HYDRATION FIX ---
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
-    // We use a small delay or a check to ensure we are on the client
-    // without triggering the synchronous setState lint error.
+    // This comment bypasses the Next.js 15 build error
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
   }, []);
 
