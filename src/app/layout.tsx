@@ -1,8 +1,8 @@
-import type { Metadata } from "next";
-import { Inter } from "next/font/google"; // Import the classic Inter font
+import type { Metadata, Viewport } from "next";
+import { Inter } from "next/font/google";
 import "./globals.css";
+import { SolanaProvider } from "@/components/SolanaProvider";
 
-// Configure the font
 const inter = Inter({
   subsets: ["latin"],
   display: "swap",
@@ -11,6 +11,16 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "SeekerDroid",
   description: "Gold-standard Solana Seeker PWA template",
+  manifest: "/manifest.json", // Ensures the PWA is discoverable
+};
+
+// Essential for mobile: Prevents accidental zooming on input focus
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  themeColor: "#000000",
 };
 
 export default function RootLayout({
@@ -20,9 +30,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      {/* Apply the font directly using inter.className */}
-      <body className={`${inter.className} antialiased`}>
-        {children}
+      <body className={`${inter.className} antialiased bg-black text-white`}>
+        <SolanaProvider>
+          {children}
+        </SolanaProvider>
       </body>
     </html>
   );
