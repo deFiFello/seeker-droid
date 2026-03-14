@@ -5,15 +5,17 @@ import { Drawer } from 'vaul';
 import { useState, useEffect } from 'react';
 
 export default function WalletButton() {
-  const { wallet, publicKey, disconnect, connecting, wallets, select } = useWallet();
+  const { publicKey, disconnect, connecting, wallets, select } = useWallet();
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
 
-  useEffect(() => setMounted(true), []);
+  useEffect(() => {
+    const timer = setTimeout(() => setMounted(true), 0);
+    return () => clearTimeout(timer);
+  }, []);
 
   const formatAddress = (addr: string) => `${addr.slice(0, 4)}...${addr.slice(-4)}`;
 
-  // Prevents hydration mismatch on the button itself
   if (!mounted) return (
     <button className="bg-zinc-800 text-transparent px-6 py-2 rounded-full text-sm animate-pulse">
       Connect Wallet
@@ -49,7 +51,9 @@ export default function WalletButton() {
                 Select <span className="text-[#14F195]">Wallet</span>
               </Drawer.Title>
               <div className="flex flex-col gap-3">
-                {wallets.filter(w => w.readyState !== 'NotDetected' || w.adapter.name === 'Solana Mobile Stack').map((w) => (
+                {wallets
+                  .filter(w => w.readyState !== 'NotDetected' || w.adapter.name === 'Solana Mobile Stack')
+                  .map((w) => (
                   <button
                     key={w.adapter.name}
                     className="flex items-center justify-between p-4 bg-zinc-900 border border-zinc-800/50 hover:border-[#14F195]/50 rounded-2xl transition-all group"
@@ -71,9 +75,7 @@ export default function WalletButton() {
                         <span className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold">{w.readyState}</span>
                       </div>
                     </div>
-                    <div className="text-zinc-700 group-hover:text-[#14F195] transition-colors">
-                        →
-                    </div>
+                    <div className="text-zinc-700 group-hover:text-[#14F195] transition-colors">→</div>
                   </button>
                 ))}
               </div>

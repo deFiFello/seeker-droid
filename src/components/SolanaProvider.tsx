@@ -14,7 +14,6 @@ import {
 
 import '@solana/wallet-adapter-react-ui/styles.css';
 
-// Changed to a named export to match your Layout import
 export function SolanaProvider({ children }: { children: ReactNode }) {
     const network = WalletAdapterNetwork.Devnet; 
     const endpoint = useMemo(() => clusterApiUrl(network), [network]);
@@ -26,7 +25,7 @@ export function SolanaProvider({ children }: { children: ReactNode }) {
                 appIdentity: {
                     name: 'SeekerDroid',
                     uri: 'https://seeker-droid.vercel.app',
-                    icon: 'https://seeker-droid.vercel.app/favicon.ico', // Use full URL for MWA
+                    icon: 'https://seeker-droid.vercel.app/favicon.ico',
                 },
                 authorizationResultCache: createDefaultAuthorizationResultCache(),
                 cluster: 'devnet',

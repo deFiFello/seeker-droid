@@ -7,15 +7,11 @@ export default function Home() {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    // This is a standard pattern for PWAs to avoid hydration mismatch
-    setMounted(true);
+    const timer = setTimeout(() => setMounted(true), 0);
+    return () => clearTimeout(timer);
   }, []);
 
-  // Return a stable black screen while mounting to prevent "flicker" 
-  // and satisfy Next.js server-side rendering
-  if (!mounted) {
-    return <main className="min-h-screen bg-black" />;
-  }
+  if (!mounted) return <main className="min-h-screen bg-black" />;
 
   return (
     <main className="min-h-screen bg-black text-white flex flex-col items-center justify-between p-6 pb-[env(safe-area-inset-bottom)] pt-[env(safe-area-inset-top)] overflow-hidden">
