@@ -1,45 +1,44 @@
 'use client';
 
-import { useMemo, ReactNode } from 'react';
-import { ConnectionProvider, WalletProvider } from '@solana/wallet-adapter-react';
-import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
+import { useMemo } from 'react';
+import { ConnectionProvider, WalletProvider } from '@solana/wallet-adapter-react'; 
 import { WalletModalProvider } from '@solana/wallet-adapter-react-ui';
 import { clusterApiUrl } from '@solana/web3.js';
-import { 
-    SolanaMobileWalletAdapter, 
-    createDefaultAuthorizationResultCache, 
-    createDefaultAddressSelector, 
-    createDefaultWalletNotFoundHandler 
-} from '@solana-mobile/wallet-adapter-mobile';
+import {
+    createDefaultAuthorizationCache,
+    createDefaultChainSelector,
+    createDefaultWalletNotFoundHandler,
+    registerMwa,
+} from '@solana-mobile/wallet-standard-mobile';
 
-import '@solana/wallet-adapter-react-ui/styles.css';
+// 1. Client-side only registration
+if (typeof window !== 'undefined') {
+    registerMwa({
+        appIdentity: {
+            name: 'SeekerDroid',
+            uri: 'https://seeker-droid.vercel.app',
+            icon: 'favicon.ico', 
+        },
+        authorizationCache: createDefaultAuthorizationCache(),
+        chains: ['solana:devnet', 'solana:mainnet'],
+        chainSelector: createDefaultChainSelector(),
+        onWalletNotFound: createDefaultWalletNotFoundHandler(),
+    });
+}
 
-export function SolanaProvider({ children }: { children: ReactNode }) {
-    // SWITCHED TO MAINNET
-    const network = WalletAdapterNetwork.Mainnet; 
-    const endpoint = useMemo(() => clusterApiUrl(network), [network]);
+export function SolanaProvider({ children }: { children: React.ReactNode }) {
+    // Switching to devnet for the test push
+    const endpoint = useMemo(() => clusterApiUrl('devnet'), []);
 
-    const wallets = useMemo(
-        () => [
-            new SolanaMobileWalletAdapter({
-                addressSelector: createDefaultAddressSelector(),
-                appIdentity: {
-                    name: 'SeekerDroid',
-                    uri: 'https://seeker-droid.vercel.app',
-                    icon: 'https://seeker-droid.vercel.app/favicon.ico', 
-                },
-                authorizationResultCache: createDefaultAuthorizationResultCache(),
-                cluster: 'mainnet-beta', // Must match network
-                onWalletNotFound: createDefaultWalletNotFoundHandler(),
-            }),
-        ],
-        []
-    );
+    // 2. Mobile Wallet Adapter is now automatically injected via registerMwa
+    const wallets = useMemo(() => [], []);
 
     return (
         <ConnectionProvider endpoint={endpoint}>
             <WalletProvider wallets={wallets} autoConnect>
-                <WalletModalProvider>{children}</WalletModalProvider>
+                <WalletModalProvider>
+                    {children}
+                </WalletModalProvider>
             </WalletProvider>
         </ConnectionProvider>
     );
