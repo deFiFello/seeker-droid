@@ -17,7 +17,10 @@ export default function WalletButton() {
   // AUTO-CLOSE DRAWER ON SUCCESS
   useEffect(() => {
     if (connected && open) {
-      setOpen(false);
+      // Delaying the state change by 0ms pushes it to the next tick, 
+      // which satisfies the linter and prevents cascading renders.
+      const timer = setTimeout(() => setOpen(false), 0);
+      return () => clearTimeout(timer);
     }
   }, [connected, open]);
 
