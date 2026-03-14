@@ -12,110 +12,114 @@ export default function WalletButton() {
   const [isVerified, setIsVerified] = useState(false);
   const [mounted, setMounted] = useState(false);
 
+  // 1. STABLE HYDRATION FIX: setTimeout ensures the build passes without ESLint hacks
   useEffect(() => {
     const timer = setTimeout(() => setMounted(true), 0);
     return () => clearTimeout(timer);
   }, []);
 
+  // 2. ROBUST VERIFICATION: Uses useCallback and resets state on rejection
   const handleVerify = useCallback(async () => {
     if (!publicKey || !signMessage) return;
+    
     try {
-      const message = new TextEncoder().encode(`Genesis Seed Auth: ${new Date().getTime()}`);
+      const message = new TextEncoder().encode(
+        `Genesis Seed Verification\nWallet: ${publicKey.toBase58()}\nTime: ${Date.now()}`
+      );
       const signature = await signMessage(message);
       setIsVerified(true);
-      console.log('Proof Secured:', bs58.encode(signature));
+      console.log('Hardware Verified:', bs58.encode(signature));
     } catch (e) {
-      console.error('Verification failed', e);
+      console.error('Signature rejected or failed:', e);
+      // Reset state so the user isn't stuck on "Check Wallet" if they cancel
       setIsVerified(false);
     }
   }, [publicKey, signMessage]);
 
-  // 3. Auto-trigger on initial connection
+  // 3. AUTO-TRIGGER: Runs once when connection is established
   useEffect(() => {
     if (publicKey && !isVerified && !connecting) {
-      // Wrapping in setTimeout(0) pushes the execution to the next tick,
-      // which satisfies the Next.js 15 "cascading render" check.
-      const timeoutId = setTimeout(() => {
-        handleVerify();
-      }, 0);
-      return () => clearTimeout(timeoutId);
+      handleVerify();
     }
   }, [publicKey, isVerified, connecting, handleVerify]);
-  
-  if (!mounted) return <div className="h-10 w-32" />;
 
-  // --- UI: CONNECTED ---
-  if (publicKey) {
+  if (!mounted) return <div className="h-12 w-40 bg-zinc-900/20 rounded-full animate-pulse" />;
+
+  // --- STATE: FULL SUCCESS ---
+  if (publicKey && isVerified) {
     return (
-      <div className="flex items-center gap-2">
-        {/* Main Action Button */}
+      <div className="flex flex-col items-center animate-in fade-in zoom-in duration-500">
         <button 
-          onClick={!isVerified ? handleVerify : undefined}
-          disabled={isVerified}
-          className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-mono border transition-all ${
-            isVerified 
-              ? 'bg-zinc-900/50 border-emerald-500/30 text-emerald-400 cursor-default' 
-              : 'bg-amber-500/10 border-amber-500/50 text-amber-500 animate-pulse active:scale-95'
-          }`}
+          onClick={() => {
+            disconnect();
+            setIsVerified(false);
+          }}
+          className="bg-emerald-500/10 border border-emerald-500 text-emerald-400 px-6 py-2 rounded-full text-sm font-bold shadow-[0_0_15px_rgba(16,185,129,0.1)] active:scale-95 transition-all"
         >
-          <span>{publicKey.toBase58().slice(0, 4)}...{publicKey.toBase58().slice(-4)}</span>
-          {isVerified ? (
-            <span className="flex h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)]" />
-          ) : (
-            <span className="text-[10px] font-bold">VERIFY</span>
-          )}
-        </button>
-
-        {/* Dedicated Disconnect Button */}
-        <button 
-          onClick={() => { disconnect(); setIsVerified(false); }}
-          className="p-2 rounded-full bg-zinc-900 border border-zinc-800 text-zinc-500 hover:text-white active:scale-90 transition-all"
-          aria-label="Disconnect"
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M18 6L6 18M6 6l12 12" />
-          </svg>
+          {publicKey.toBase58().slice(0, 4)}...{publicKey.toBase58().slice(-4)} ✓
         </button>
       </div>
     );
   }
 
-  // --- UI: DISCONNECTED ---
+  // --- STATE: PENDING (Waiting for Hardware) ---
+  if (publicKey && !isVerified) {
+    return (
+      <button 
+        onClick={handleVerify}
+        className="bg-white text-black px-8 py-3 rounded-2xl font-black uppercase tracking-tight animate-pulse"
+      >
+        Check Your Wallet...
+      </button>
+    );
+  }
+
+  // --- STATE: DISCONNECTED ---
   return (
     <Drawer.Root open={open} onOpenChange={setOpen}>
       <Drawer.Trigger asChild>
-        <button className="bg-[#14F195] text-black px-8 py-3 rounded-full font-bold active:scale-95 transition-transform uppercase tracking-tighter shadow-lg shadow-emerald-500/10">
-          {connecting ? 'Linking...' : 'Connect Wallet'}
+        <button className="bg-[#14F195] text-black px-8 py-3 rounded-full font-black uppercase tracking-tighter active:scale-95 transition-all shadow-lg shadow-emerald-500/10">
+          Connect Wallet
         </button>
       </Drawer.Trigger>
       <Drawer.Portal>
         <Drawer.Overlay className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50" />
         <Drawer.Content className="fixed bottom-0 left-0 right-0 bg-zinc-950 p-8 rounded-t-[2.5rem] border-t border-zinc-800 z-50 focus:outline-none">
           <div className="max-w-md mx-auto">
-            <div className="w-12 h-1.5 bg-zinc-800 rounded-full mx-auto mb-6" />
-            <Drawer.Title className="text-white text-lg font-bold mb-6 text-center tracking-tight">
-              Select Wallet
+            <div className="w-12 h-1.5 bg-zinc-800 rounded-full mx-auto mb-8" />
+            
+            {/* Proper Vaul Title for Accessibility */}
+            <Drawer.Title className="text-white text-xl font-black mb-6 text-center uppercase tracking-tight">
+              Select Seeker Wallet
             </Drawer.Title>
             
             <div className="flex flex-col gap-3">
-              {wallets.map((w) => (
-                <button
-                  key={w.adapter.name}
-                  className="flex items-center justify-between p-4 bg-zinc-900 border border-zinc-800 rounded-2xl text-white active:scale-95 transition-all group hover:border-zinc-700"
-                  onClick={() => {
-                    select(w.adapter.name);
-                    setOpen(false);
-                  }}
-                >
-                  <div className="flex items-center gap-4">
-                    <Image src={w.adapter.icon} alt={w.adapter.name} width={28} height={28} className="rounded grayscale group-hover:grayscale-0 transition-all" />
-                    <span className="font-bold">{w.adapter.name}</span>
-                  </div>
-                  <div className="text-zinc-600 group-hover:text-emerald-500 transition-colors">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-                  </div>
-                </button>
-              ))}
+              {wallets.length > 0 ? (
+                wallets.map((w) => (
+                  <button
+                    key={w.adapter.name}
+                    className="flex items-center justify-between p-4 bg-zinc-900 border border-zinc-800 rounded-2xl text-white active:scale-[0.98] transition-all"
+                    onClick={() => {
+                      select(w.adapter.name);
+                      setOpen(false);
+                    }}
+                  >
+                    <div className="flex items-center gap-4">
+                      <Image 
+                        src={w.adapter.icon} 
+                        alt={w.adapter.name} 
+                        width={28} 
+                        height={28} 
+                        className="rounded-md"
+                      />
+                      <span className="font-bold text-lg">{w.adapter.name}</span>
+                    </div>
+                    <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                  </button>
+                ))
+              ) : (
+                <p className="text-zinc-500 text-center py-4 font-mono text-xs uppercase">No Adapters Found</p>
+              )}
             </div>
           </div>
         </Drawer.Content>
