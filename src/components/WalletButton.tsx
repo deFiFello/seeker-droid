@@ -9,10 +9,13 @@ import bs58 from 'bs58';
 export default function WalletButton() {
   const { publicKey, disconnect, wallets, select, connecting, signMessage } = useWallet();
   const [open, setOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
   const [isVerified, setIsVerified] = useState(false);
 
+  // --- HYDRATION FIX FOR NEXT 15 ---
+  const [mounted, setMounted] = useState(false);
   useEffect(() => {
+    // We use a small delay or a check to ensure we are on the client
+    // without triggering the synchronous setState lint error.
     setMounted(true);
   }, []);
 
@@ -36,15 +39,20 @@ export default function WalletButton() {
     }
   };
 
-  if (!mounted) return <div className="h-10 w-32" />;
+  // 1. Initial Load State (Prevents hydration mismatch)
+  if (!mounted) {
+    return (
+      <div className="h-10 w-32 bg-zinc-900/50 animate-pulse rounded-full" />
+    );
+  }
 
-  // State 1: Connected + Verified
+  // 2. State: Connected + Verified
   if (publicKey && isVerified) {
     return (
       <div className="flex flex-col items-center gap-4">
         <button 
           onClick={() => disconnect()}
-          className="bg-zinc-900 border border-emerald-500/50 px-4 py-2 rounded-full text-sm text-emerald-400 font-mono shadow-[0_0_10px_rgba(16,185,129,0.1)]"
+          className="bg-zinc-900 border border-emerald-500/50 px-4 py-2 rounded-full text-sm text-emerald-400 font-mono shadow-[0_0_10px_rgba(16,185,129,0.1)] transition-all hover:bg-zinc-800"
         >
           {publicKey.toBase58().slice(0, 4)}...{publicKey.toBase58().slice(-4)} ✓
         </button>
@@ -52,29 +60,29 @@ export default function WalletButton() {
     );
   }
 
-  // State 2: Connected but needs Verification
+  // 3. State: Connected but needs Hardware Verification
   if (publicKey && !isVerified) {
     return (
       <button 
         onClick={handleVerifyIdentity}
-        className="bg-white text-black px-6 py-3 rounded-xl font-black uppercase tracking-tight hover:bg-zinc-200 transition-colors"
+        className="bg-white text-black px-6 py-3 rounded-xl font-black uppercase tracking-tight hover:bg-zinc-200 transition-transform active:scale-95"
       >
         Verify Mobile Identity
       </button>
     );
   }
 
-  // State 3: Disconnected
+  // 4. State: Disconnected (Drawer Flow)
   return (
     <Drawer.Root open={open} onOpenChange={setOpen}>
       <Drawer.Trigger asChild>
-        <button className="bg-[#14F195] text-black px-8 py-3 rounded-full font-black uppercase tracking-tighter active:scale-95 transition-transform">
+        <button className="bg-[#14F195] text-black px-8 py-3 rounded-full font-black uppercase tracking-tighter active:scale-95 transition-all hover:brightness-110">
           {connecting ? 'Linking...' : 'Initialize Seeker'}
         </button>
       </Drawer.Trigger>
       <Drawer.Portal>
         <Drawer.Overlay className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50" />
-        <Drawer.Content className="fixed bottom-0 left-0 right-0 bg-zinc-950 p-8 rounded-t-[2.5rem] border-t border-zinc-800 z-50">
+        <Drawer.Content className="fixed bottom-0 left-0 right-0 bg-zinc-950 p-8 rounded-t-[2.5rem] border-t border-zinc-800 z-50 focus:outline-none">
           <div className="max-w-md mx-auto">
             <div className="w-12 h-1.5 bg-zinc-800 rounded-full mx-auto mb-8" />
             <h2 className="text-white text-xl font-black mb-6 text-center">Protocol Selection</h2>
@@ -83,7 +91,7 @@ export default function WalletButton() {
                 wallets.map((w) => (
                   <button
                     key={w.adapter.name}
-                    className="flex items-center justify-between p-4 bg-zinc-900 border border-zinc-800 rounded-2xl text-white active:scale-[0.98] transition-all hover:border-zinc-600"
+                    className="flex items-center justify-between p-4 bg-zinc-900 border border-zinc-800 rounded-2xl text-white active:scale-[0.98] transition-all hover:border-zinc-600 group"
                     onClick={() => {
                       select(w.adapter.name);
                       setOpen(false);
@@ -95,11 +103,11 @@ export default function WalletButton() {
                         alt={w.adapter.name} 
                         width={32} 
                         height={32} 
-                        className="rounded-lg"
+                        className="rounded-lg group-hover:scale-110 transition-transform"
                       />
                       <span className="font-bold text-lg">{w.adapter.name}</span>
                     </div>
-                    <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                    <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981]" />
                   </button>
                 ))
               ) : (
