@@ -10,6 +10,7 @@ import {
     registerMwa,
 } from '@solana-mobile/wallet-standard-mobile';
 
+// We register MWA globally to ensure the Seeker hardware is recognized
 if (typeof window !== 'undefined') {
     registerMwa({
         appIdentity: {
@@ -25,13 +26,18 @@ if (typeof window !== 'undefined') {
 }
 
 export function SolanaProvider({ children }: { children: React.ReactNode }) {
+    // Standard endpoint for Mainnet
     const endpoint = useMemo(() => clusterApiUrl('mainnet-beta'), []);
+    
+    // We leave this empty because MWA 2.0 handles wallet discovery automatically
     const wallets = useMemo(() => [], []);
 
     return (
         <ConnectionProvider endpoint={endpoint}>
             <WalletProvider wallets={wallets} autoConnect>
-                {/* REMOVED WalletModalProvider - This stops the white popup error */}
+                {/* WalletModalProvider is GONE. 
+                  This prevents the "We can't find a wallet" popup from Screenshot 4568.
+                */}
                 {children}
             </WalletProvider>
         </ConnectionProvider>
