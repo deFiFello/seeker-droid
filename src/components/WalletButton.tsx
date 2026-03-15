@@ -12,115 +12,72 @@ export default function WalletButton() {
   const [isVerified, setIsVerified] = useState(false);
   const [mounted, setMounted] = useState(false);
 
-  // 1. HYDRATION FIX: Passes Next.js 15 build
-  useEffect(() => {
-    const timer = setTimeout(() => setMounted(true), 0);
-    return () => clearTimeout(timer);
-  }, []);
+  useEffect(() => { setMounted(true); }, []);
 
-  // 2. VERIFICATION LOGIC: Handles the Seeker Hardware Handshake
   const handleVerify = useCallback(async () => {
     if (!publicKey || !signMessage) return;
-    
     try {
-      const message = new TextEncoder().encode(
-        `Genesis Seed Verification\nWallet: ${publicKey.toBase58()}\nTime: ${Date.now()}`
-      );
+      const message = new TextEncoder().encode(`Genesis Seed Verify: ${Date.now()}`);
       const signature = await signMessage(message);
-      setIsVerified(true);
-      console.log('Hardware Verified:', bs58.encode(signature));
+      if (signature) setIsVerified(true);
     } catch (e) {
-      console.error('Signature rejected or failed:', e);
-      setIsVerified(false);
+      console.error('Verification failed', e);
     }
   }, [publicKey, signMessage]);
 
-  // 3. THE FIX: Auto-trigger with an async break to satisfy the linter
   useEffect(() => {
     if (publicKey && !isVerified && !connecting) {
-      const timer = setTimeout(() => {
-        handleVerify();
-      }, 1);
-      return () => clearTimeout(timer);
+      handleVerify();
     }
   }, [publicKey, isVerified, connecting, handleVerify]);
 
-  if (!mounted) return <div className="h-12 w-40 bg-zinc-900/20 rounded-full animate-pulse" />;
+  if (!mounted) return null;
 
-  // STATE: SUCCESS
   if (publicKey && isVerified) {
     return (
-      <div className="flex flex-col items-center animate-in fade-in zoom-in duration-500">
-        <button 
-          onClick={() => {
-            disconnect();
-            setIsVerified(false);
-          }}
-          className="bg-emerald-500/10 border border-emerald-500 text-emerald-400 px-6 py-2 rounded-full text-sm font-bold shadow-[0_0_15px_rgba(16,185,129,0.1)]"
-        >
-          {publicKey.toBase58().slice(0, 4)}...{publicKey.toBase58().slice(-4)} ✓
-        </button>
-      </div>
+      <button 
+        onClick={() => { disconnect(); setIsVerified(false); }}
+        className="bg-[#14F195] text-black px-6 py-2 rounded-full text-sm font-black uppercase shadow-[0_0_20px_rgba(20,241,149,0.3)]"
+      >
+        Verified ✓
+      </button>
     );
   }
 
-  // STATE: PENDING HARDWARE
   if (publicKey && !isVerified) {
     return (
-      <button 
-        onClick={handleVerify}
-        className="bg-white text-black px-8 py-3 rounded-2xl font-black uppercase tracking-tight animate-pulse"
-      >
+      <button className="bg-zinc-800 text-zinc-400 px-8 py-3 rounded-2xl font-black uppercase animate-pulse">
         Check Your Wallet...
       </button>
     );
   }
 
-  // STATE: INITIAL / DISCONNECTED
   return (
     <Drawer.Root open={open} onOpenChange={setOpen}>
       <Drawer.Trigger asChild>
-        <button className="bg-[#14F195] text-black px-8 py-3 rounded-full font-black uppercase tracking-tighter active:scale-95 transition-all">
+        <button className="bg-white text-black px-8 py-3 rounded-2xl font-black uppercase tracking-tight active:scale-95 transition-all">
           Connect Wallet
         </button>
       </Drawer.Trigger>
       <Drawer.Portal>
-        <Drawer.Overlay className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50" />
+        <Drawer.Overlay className="fixed inset-0 bg-black/60 backdrop-blur-md z-50" />
         <Drawer.Content className="fixed bottom-0 left-0 right-0 bg-zinc-950 p-8 rounded-t-[2.5rem] border-t border-zinc-800 z-50 focus:outline-none">
-          <div className="max-w-md mx-auto text-center">
+          <div className="max-w-md mx-auto">
             <div className="w-12 h-1.5 bg-zinc-800 rounded-full mx-auto mb-8" />
-            
-            <Drawer.Title className="text-white text-xl font-black mb-6 uppercase tracking-tight">
-              Select Seeker Wallet
-            </Drawer.Title>
-            
+            <h2 className="text-white text-xl font-black mb-6 uppercase text-center">Select Wallet</h2>
             <div className="flex flex-col gap-3">
-              {wallets.length > 0 ? (
-                wallets.map((w) => (
-                  <button
-                    key={w.adapter.name}
-                    className="flex items-center justify-between p-4 bg-zinc-900 border border-zinc-800 rounded-2xl text-white active:scale-[0.98] transition-all"
-                    onClick={() => {
-                      select(w.adapter.name);
-                      setOpen(false);
-                    }}
-                  >
-                    <div className="flex items-center gap-4">
-                      <Image 
-                        src={w.adapter.icon} 
-                        alt={w.adapter.name} 
-                        width={28} 
-                        height={28} 
-                        className="rounded-md"
-                      />
-                      <span className="font-bold text-lg">{w.adapter.name}</span>
-                    </div>
-                    <div className="w-2 h-2 rounded-full bg-emerald-500" />
-                  </button>
-                ))
-              ) : (
-                <p className="text-zinc-500 py-4 font-mono text-xs uppercase">No Adapters Found</p>
-              )}
+              {wallets.map((w) => (
+                <button
+                  key={w.adapter.name}
+                  className="flex items-center justify-between p-5 bg-zinc-900 border border-zinc-800 rounded-2xl text-white active:scale-95 transition-all"
+                  onClick={() => { select(w.adapter.name); setOpen(false); }}
+                >
+                  <div className="flex items-center gap-4">
+                    <Image src={w.adapter.icon} alt={w.adapter.name} width={28} height={28} className="rounded-md" />
+                    <span className="font-bold text-lg">{w.adapter.name}</span>
+                  </div>
+                </button>
+              ))}
             </div>
           </div>
         </Drawer.Content>
