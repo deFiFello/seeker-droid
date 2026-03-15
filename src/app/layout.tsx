@@ -1,22 +1,28 @@
-import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
-import "./globals.css";
-import { SolanaProvider } from "@/components/SolanaProvider";
+import type { Metadata, Viewport } from 'next';
+import { Inter } from 'next/font/google';
+import './globals.css';
+import { SolanaProvider } from '@/components/SolanaProvider';
 
-const inter = Inter({ subsets: ["latin"], display: "swap" });
+const inter = Inter({ subsets: ['latin'], display: 'swap' });
 
 export const metadata: Metadata = {
-  title: "SeekerDroid",
-  description: "Gold-standard Solana Seeker PWA template",
-  manifest: "/manifest.json",
+  title: 'SeekerDroid',
+  description: 'Mobile-optimized Solana Seeker PWA template for the dApp Store',
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'SeekerDroid',
+  },
 };
 
 export const viewport: Viewport = {
-  width: "device-width",
+  width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
-  themeColor: "#000000",
+  viewportFit: 'cover',
+  themeColor: '#000000',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
