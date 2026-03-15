@@ -21,7 +21,7 @@
     "alias": "android"
   },
   "appVersionName": "1.1.0",
-  "appVersionCode": 2,
+  "appVersionCode": 3,
   "shortcuts": [],
   "generatorApp": "bubblewrap-cli",
   "webManifestUrl": "https://seeker-droid.vercel.app/manifest.json",
@@ -36,7 +36,12 @@
   "fullScopeUrl": "https://seeker-droid.vercel.app/",
   "minSdkVersion": 21,
   "orientation": "portrait",
-  "fingerprints": [{"type": "sha256cert", "value": "D1:90:63:42:A2:54:AB:8C:0E:6C:61:79:5B:A8:7D:9C:E4:EC:4D:10:50:A9:53:D8:20:20:5F:18:E4:6E:91:95"}],
+  "fingerprints": [
+    {
+      "type": "sha256cert",
+      "value": "D1:90:63:42:A2:54:AB:8C:0E:6C:61:79:5B:A8:7D:9C:E4:EC:4D:10:50:A9:53:D8:20:20:5F:18:E4:6E:91:95"
+    }
+  ],
   "additionalTrustedOrigins": [],
   "retainedBundles": [],
   "protocolHandlers": [],
