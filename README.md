@@ -1,148 +1,72 @@
 # SeekerDroid
 
-**A starter template AND integration guide for shipping Solana PWAs to the dApp Store.**
+**Mobile-native PWA template for the Solana dApp Store.**
 
-SeekerDroid gives you two things:
+A production-ready Next.js 15 template that packages any Solana web app as a Trusted Web Activity (TWA) for the Seeker device and the Solana dApp Store. Includes Mobile Wallet Adapter (MWA) integration, bottom-sheet wallet UX, identity verification, and full Bubblewrap TWA packaging.
 
-1. **A ready-to-ship PWA template** — clone it, replace the demo content, deploy to Vercel, package with Bubblewrap, submit to the dApp Store. MWA, TWA, icons, manifests, asset links — all configured.
-
-2. **A drop-in MWA integration pattern** — already have a Solana web app? Copy the `registerMwa()` + `useConnect` hook pattern into your existing project. ~30 lines of code to make any Solana web app work reliably on Seeker hardware. We proved this by integrating it into [Solis](https://github.com/deFiFello/solis-icm-directory) — a production trading platform with 14 assets and live Jupiter swaps.
-
-[![Get it on Solana dApp Store](docs/dapp-store-badge.png)](https://seeker-droid.vercel.app)
-
-> **Live Demo:** [seeker-droid.vercel.app](https://seeker-droid.vercel.app) — Open on Android Chrome or Solana Seeker
+**Live:** [seeker-droid.vercel.app](https://seeker-droid.vercel.app)
 
 ---
 
-## Two Ways to Use This
+## What This Template Does
 
-### Path A: Start a New Solana PWA
+SeekerDroid solves the gap between "I have a Solana web app" and "I have a native-feeling app in the Solana dApp Store." It provides:
 
-```bash
-git clone https://github.com/deFiFello/seeker-droid.git my-dapp
-cd my-dapp
-npm install
-```
-
-You get: Next.js 15 app with MWA wallet connect, bottom-sheet UI, TWA packaging, Bubblewrap build pipeline, Digital Asset Links, branded splash screen, and service worker — all working out of the box. Replace `page.tsx` with your app logic.
-
-### Path B: Add MWA to Your Existing Web App
-
-Don't need the template? Grab the pattern. Four things to add to any Solana web app:
-
-```bash
-npm install @solana-mobile/wallet-standard-mobile vaul
-```
-
-Then add `registerMwa()` to your provider, set `autoConnect: false`, use the `useConnect` hook to bypass the desktop modal on Android, and drop in `MobileWalletSheet.tsx` for touch-native wallet management. Full guide: [Integration Guide →](#integration-guide-adding-mwa-to-an-existing-app-path-b)
-
-We tested Path B on **[Solis](https://solis-tokenized-markets.vercel.app)** — a live trading app with Jupiter swaps, ZK privacy, and 14 tokenized assets. Screenshots below.
+- **PWA scaffolding** — `manifest.json`, service worker, maskable icons
+- **MWA integration** — `@solana-mobile/wallet-standard-mobile` with proper SSR guards for Next.js
+- **Mobile-first wallet UX** — Bottom-sheet wallet picker, direct `connect()` on Android (no modal), 8-second timeout for stuck Seed Vault connections
+- **TWA packaging** — Bubblewrap config, Digital Asset Links, signed APK generation
+- **Seeker-optimized** — Full-screen launch, Seed Vault + Phantom + Solflare support, identity verification flow
 
 ---
 
-## Screenshots
+## Hardware-Tested on Solana Seeker
 
-### SeekerDroid Template (Path A)
+Every feature has been tested on actual Seeker hardware. Screenshots below show the real device running both SeekerDroid and [Solis](https://solis-early-access.vercel.app) (a production trading app wrapped using this template).
 
-<p align="center">
-  <img src="docs/screenshot-connected.png" width="280" alt="Connected state with MWA" />
-  &nbsp;&nbsp;&nbsp;
-  <img src="docs/screenshot-verified.png" width="280" alt="Identity verified via signMessage" />
-</p>
+### SeekerDroid — TWA Launch (Full-Screen, No Browser Bar)
 
-<p align="center">
-  <em>Left: Wallet connected via MWA — Right: Identity verified with on-device signMessage</em>
-</p>
+![SeekerDroid TWA Launch](docs/screenshots/seekerdroid-twa-launch.png)
 
-### Solis Integration (Path B) — Full MWA Flow on Seeker Hardware
+The app launches from the Seeker home screen in full-screen mode with no browser chrome. This is achieved through the TWA trust relationship established by `assetlinks.json`.
 
-The SeekerDroid pattern was integrated into [Solis](https://github.com/deFiFello/solis-icm-directory), a production trading platform with 14 tokenized assets, Jupiter swaps, and ZK-shielded privacy swaps. Here's the complete user flow on a Solana Seeker:
+### SeekerDroid — MWA Wallet Selection
 
-**Step 1: Tap Connect → MWA fires directly (no desktop modal)**
+![MWA Wallet Chooser](docs/screenshots/seekerdroid-wallet-chooser.png)
 
-<p align="center">
-  <img src="docs/solis-disconnected.png" width="220" alt="Step 1: Swap page before connect" />
-  &nbsp;
-  <img src="docs/solis-seed-vault-connect.png" width="220" alt="Step 2: Seed Vault connect prompt" />
-  &nbsp;
-  <img src="docs/solis-seed-vault-select.png" width="220" alt="Step 3: Select wallet account" />
-</p>
+Tapping "Connect" triggers the Android wallet chooser via MWA. All installed MWA-compatible wallets appear: Seed Vault, Phantom, Solflare, Jupiter.
 
-<p align="center">
-  <em>Tapping "Connect" triggers MWA → Seed Vault opens → user picks their wallet account. No modal, no extra taps.</em>
-</p>
+### SeekerDroid — Connected + Identity Verification
 
-**Step 2: Connected → Bottom-sheet wallet management**
+| Session Active | Sign Message Prompt | Identity Verified |
+|---|---|---|
+| ![Connected](docs/screenshots/seekerdroid-connected.png) | ![Sign Message](docs/screenshots/seekerdroid-sign-message.png) | ![Verified](docs/screenshots/seekerdroid-verified.png) |
 
-<p align="center">
-  <img src="docs/solis-swap-connected.png" width="220" alt="Step 4: Connected with live balances" />
-  &nbsp;
-  <img src="docs/solis-bottom-sheet.png" width="220" alt="Step 5: Bottom-sheet wallet drawer" />
-</p>
+The full flow: wallet connects → address displayed → sign message prompt fires from `seeker-droid.vercel.app` → identity verified with wallet address.
 
-<p align="center">
-  <em>Once connected, tapping the address opens the SeekerDroid bottom-sheet — Copy Address, View on Solscan, Disconnect. All swipeable, all touch-native.</em>
-</p>
+### Solis — Real App Wrapped with SeekerDroid's Pattern
 
-**What the bottom sheet replaces:** On desktop, wallet-adapter-react-ui shows a dropdown menu. On mobile, dropdowns are unreliable — they close on touch, can't be swiped, and fight with scroll. The SeekerDroid bottom sheet (powered by Vaul) is the native Android interaction pattern — it slides up, can be swiped down to dismiss, and has large touch targets. This is the same UX that Phantom, Jupiter, and native Android apps use.
+To prove the template works beyond a demo, we wrapped [Solis](https://solis-early-access.vercel.app) — a production Solana trading app with live Jupiter swaps, ZK privacy (PrivacyCash), and tokenized asset data.
+
+| Solis TWA Home | Seed Vault Connect | Wallet Bottom Sheet |
+|---|---|---|
+| ![Solis Home](docs/screenshots/solis-twa-home.png) | ![Seed Vault](docs/screenshots/solis-seedvault-connect.png) | ![Bottom Sheet](docs/screenshots/solis-wallet-bottomsheet.png) |
+
+| Connected Swap UI | Successful Swap | Asset Detail (LBTC) |
+|---|---|---|
+| ![Swap](docs/screenshots/solis-swap-connected.png) | ![Swap Success](docs/screenshots/solis-swap-success.png) | ![LBTC](docs/screenshots/solis-asset-detail.png) |
+
+**Time to wrap Solis:** Under 1 hour. The process was: add `manifest.json` + `sw.js` + icons → register service worker → `bubblewrap init` → `bubblewrap build` → deploy `assetlinks.json` → sideload APK.
 
 ---
 
-## What This Template Solves
-
-Publishing a PWA on the Solana dApp Store requires converting your web app to an Android package via Bubblewrap CLI. The process works, but developers face several undocumented pitfalls:
-
-- **MWA connection failures** — Android Chrome's [trusted event policy](https://developer.chrome.com/docs/android/intents) silently blocks wallet connections triggered from `useEffect` or timers instead of direct user taps
-- **Splash screen and icon misconfiguration** — TWA manifests and PWA manifests need consistent theming, local assets, and separate maskable icon entries
-- **Missing Digital Asset Links** — Without `assetlinks.json` and SHA-256 fingerprint verification, the TWA shows a browser address bar instead of running in full-screen trusted mode
-- **Non-mobile UX patterns** — Desktop wallet-selection modals don't work on mobile; Android users need bottom-sheet drawers and direct MWA selection
-- **`WalletModalProvider` conflicts** — The standard wallet-adapter modal intercepts MWA connections on Android, requiring apps to either bypass it or use a direct connect flow
-- **Bubblewrap `app/` directory conflict** — `bubblewrap build` creates an `app/` directory that collides with Next.js App Router's `src/app/`, causing 404 errors on deploy
-
-SeekerDroid solves all of these and serves as a copy-paste starting point for any Solana PWA targeting the dApp Store.
-
----
-
-## Features
-
-### MWA Integration (Wallet Standard)
-
-- Uses `@solana-mobile/wallet-standard-mobile` — the recommended library going forward as `wallet-adapter-mobile` enters deprecation
-- **No `autoConnect`** — all wallet interactions are user-initiated to comply with Android Chrome's trusted event policy
-- **MWA-first connect flow** — detects MWA availability and connects directly without showing a modal, per [Solana Mobile UX Guidelines](https://docs.solanamobile.com)
-- **"Use Installed Wallet" labeling** — follows official UX guidance for the MWA wallet list entry
-- **User-initiated `signMessage`** — verification is a separate button tap, never auto-triggered from effects
-- **No `WalletModalProvider` dependency** — uses a custom bottom-sheet drawer instead of the desktop modal, avoiding the most common MWA integration issue
-
-### Mobile-Native UX
-
-- **Bottom-sheet wallet drawer** — powered by [Vaul](https://github.com/emilkowalski/vaul), the mobile-standard interaction pattern replacing desktop modals
-- **Safe area handling** — respects `env(safe-area-inset-*)` for notch/dynamic island devices and uses `100dvh` for correct mobile viewport height
-- **Touch-optimized interactions** — `active:scale-95` press feedback, large tap targets, no hover-dependent UI
-- **No-scroll single-screen layout** — the entire app fits the viewport without scrolling, as expected for a mobile utility app
-
-### TWA / Bubblewrap Pipeline
-
-- **Complete `twa-manifest.json`** — configured for Bubblewrap CLI with consistent theming, local icon URLs, Chrome Custom Tabs fallback, and portrait orientation lock
-- **Digital Asset Links** — `public/.well-known/assetlinks.json` pre-configured for TWA trusted full-screen mode
-- **Splash screen** — custom branded icons (192×192 + 512×512, regular and maskable) with consistent `#000000` background across both manifests
-- **Chrome-first, system fallback** — `fallbackType: "customtabs"` ensures Chrome is preferred with graceful degradation
-
-### PWA Configuration
-
-- **Service worker** via `@ducanh2912/next-pwa` with aggressive frontend nav caching
-- **Proper manifest** with separate `any` and `maskable` icon entries (not combined — Android treats them differently)
-- **Apple web app meta** — `capable: true`, `black-translucent` status bar, viewport cover mode
-
----
-
-## Quick Start (Path A: New PWA)
+## Quick Start — Use This Template
 
 ### Prerequisites
 
 - Node.js 18+
-- Android device or emulator (MWA only works on Android Chrome)
-- A Solana wallet installed on the device (Phantom, Solflare, or Seed Vault)
+- Java JDK 17+ (for Bubblewrap/Gradle)
+- A deployed HTTPS web app (Vercel, Netlify, etc.)
 
 ### 1. Clone and install
 
@@ -152,276 +76,174 @@ cd seeker-droid
 npm install
 ```
 
-### 2. Run locally
+### 2. Configure for your app
 
-```bash
-npm run dev
+Update `src/components/SolanaProvider.tsx` with your app identity:
+
+```typescript
+registerMwa({
+  appIdentity: {
+    name: 'Your App Name',
+    uri: 'https://your-app.vercel.app',
+    icon: '/icons/icon-192x192.png',
+  },
+  authorizationCache: createDefaultAuthorizationCache(),
+  chains: ['solana:mainnet', 'solana:devnet'],
+  chainSelector: createDefaultChainSelector(),
+  onWalletNotFound: createDefaultWalletNotFoundHandler(),
+});
 ```
-
-Open `http://localhost:3000` — the MWA connect flow will only work on Android Chrome, but you can verify the UI and build process on desktop.
 
 ### 3. Deploy
 
-The app is configured for Vercel:
-
 ```bash
 npm run build
-# Deploy to Vercel, Netlify, or any static host
+# Push to Vercel, Netlify, or any HTTPS host
 ```
 
-### 4. Build the TWA (Android APK)
+### 4. Wrap as TWA
 
 ```bash
-# Install Bubblewrap CLI
-npm install -g @bubblewrap/cli
+npm install -g @nicolo-ribaudo/bubblewrap
 
-# Generate your signing keystore (if you don't have one)
-keytool -genkeypair -alias android -keyalg RSA -keysize 2048 -validity 10000 -keystore android.keystore
-
-# Get your SHA-256 fingerprint
-keytool -list -keystore android.keystore -alias android | grep SHA256
-
-# Update twa-manifest.json with your fingerprint in the "fingerprints" array
-# Update public/.well-known/assetlinks.json with the same fingerprint
-
-# Build
-bubblewrap update
+mkdir my-twa && cd my-twa
+bubblewrap init --manifest https://your-app.vercel.app/manifest.json
 bubblewrap build
 ```
 
-> **⚠️ Important:** `bubblewrap build` creates an `app/` directory in your project root that conflicts with Next.js App Router (which uses `src/app/`). Delete it after building: `rm -rf app/` — otherwise your Next.js build will output only a 404 page.
+### 5. Set up Digital Asset Links
 
-This produces `app-release-signed.apk` and `app-release-bundle.aab` ready for dApp Store submission.
-
-### 5. Sideload and Test the TWA on Seeker
+After building, get your signing key fingerprint:
 
 ```bash
-# Connect your Seeker via USB with developer mode enabled
+keytool -list -v -keystore android.keystore -alias android | grep SHA256
+```
+
+Create `public/.well-known/assetlinks.json`:
+
+```json
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "your.package.name.twa",
+    "sha256_cert_fingerprints": ["YOUR:SHA256:FINGERPRINT:HERE"]
+  }
+}]
+```
+
+Deploy, then sideload the APK:
+
+```bash
 adb install app-release-signed.apk
 ```
 
-Or transfer the APK to your device and open it from a file manager. On first launch:
-
-1. The TWA splash screen appears (black background with cube icon)
-2. The app opens in full-screen trusted mode (no browser bar) if Digital Asset Links are verified
-3. Tapping "Connect" triggers MWA → Seed Vault directly
-4. The app behaves identically to the PWA but runs as a native Android app with its own launcher icon
+Or upload to Google Drive and install from the phone.
 
 ---
 
-## Integration Guide: Adding MWA to an Existing App (Path B)
+## Wrapping Your Own App — Step by Step
 
-SeekerDroid's MWA pattern was tested on **[Solis](https://solis-tokenized-markets.vercel.app)** — a production Solana trading platform with Jupiter swaps, PrivacyCash ZK privacy, and 14 tokenized assets. Here's how the integration works and the pitfalls we solved.
+For a detailed walkthrough of wrapping an existing Solana web app (using Solis as the example), see **[TWA-GUIDE.md](TWA-GUIDE.md)**.
 
-### The Pattern
+The guide covers:
 
-The core integration is three things:
+1. **Adding PWA support** — manifest, service worker, icons, SW registration in Next.js
+2. **Adding MWA support** — installing `@solana-mobile/wallet-standard-mobile`, registering in a non-SSR context
+3. **Wrapping with Bubblewrap** — init, build, signing key, Digital Asset Links
+4. **Testing on Seeker** — sideloading, verifying full-screen mode, testing wallet flows
 
-**1. Register MWA in a non-SSR context**
+---
 
-```typescript
-import { registerMwa } from '@solana-mobile/wallet-standard-mobile';
+## Architecture
 
-if (typeof window !== 'undefined') {
-  registerMwa({
-    appIdentity: {
-      name: 'Your App',
-      uri: 'https://yourapp.com',
-      icon: '/icon.png',
-    },
-    authorizationCache: createDefaultAuthorizationCache(),
-    chains: ['solana:mainnet'],
-    chainSelector: createDefaultChainSelector(),
-    onWalletNotFound: createDefaultWalletNotFoundHandler(),
-  });
-}
+```
+src/
+├── app/
+│   ├── layout.tsx          # Root layout with SolanaProvider + SW registration
+│   ├── page.tsx            # Landing page with connect CTA
+│   └── globals.css
+├── components/
+│   ├── SolanaProvider.tsx  # MWA registration + wallet-adapter setup
+│   ├── WalletButton.tsx    # Bottom-sheet wallet UX with timeout recovery
+│   └── RegisterSW.tsx      # Service worker registration (client component)
+public/
+├── manifest.json           # PWA manifest
+├── sw.js                   # Network-first service worker
+├── icons/                  # Standard + maskable icons (192, 512)
+└── .well-known/
+    └── assetlinks.json     # Digital Asset Links for TWA trust
 ```
 
-**2. Set `autoConnect: false`**
+### Key Design Decisions
 
-```typescript
-<WalletProvider wallets={wallets} autoConnect={false}>
-```
+**MWA registration in a React component, not module scope.** The `registerMwa` call is inside a `useEffect` with a `useRef` guard — not in a top-level `if (typeof window)` block. This guarantees it runs exactly once, after hydration, with no SSR race conditions.
 
-**3. Bypass the modal on Android — connect MWA directly from a user tap**
+**`autoConnect: false` is mandatory.** MWA on Android Chrome requires user-initiated actions (trusted events). Auto-connect fires without a user tap, which Chrome blocks. The `WalletProvider` must have `autoConnect={false}`.
 
-```typescript
-const handleConnect = async () => {
-  if (wallet?.adapter.name === SolanaMobileWalletAdapterWalletName) {
-    await connect(); // Direct MWA connect — user gesture required
-  } else if (mwaAvailable) {
-    select(SolanaMobileWalletAdapterWalletName);
-  } else {
-    showDesktopModal(); // Fallback for non-Android
-  }
-};
-```
+**Connection timeout for Seed Vault.** Seed Vault's deep-link return can hang indefinitely in TWA contexts. The `WalletButton` includes an 8-second timeout that auto-recovers, plus a tappable "Connecting..." state so users can cancel manually.
 
-**4. Replace mobile wallet UI with a bottom sheet**
+**Direct `connect()` on Android, modal on desktop.** Per the [MWA UX Guidelines](https://docs.solanamobile.com), if MWA is the selected wallet, call `connect()` immediately from the user's tap — don't show a modal. Desktop users still get the standard wallet picker.
 
-Desktop dropdowns break on mobile — they close on touch events, can't be swiped, and fight with scroll. Copy `MobileWalletSheet.tsx` from the SeekerDroid template (or from the [Solis integration](https://github.com/deFiFello/solis-icm-directory/blob/main/src/components/MobileWalletSheet.tsx)) into your project. It uses [Vaul](https://github.com/emilkowalski/vaul) to render a swipeable bottom drawer for wallet connect, address display, and disconnect — only on Android. Desktop users keep their existing UI.
+---
 
-```bash
-npm install vaul
-```
+## Tech Stack
 
-### Common Pitfalls (Solved)
-
-| Issue | Cause | Fix |
+| Layer | Package | Version |
 |---|---|---|
-| "Can't find a wallet" | `autoConnect: true` or `signMessage` in `useEffect` | Set `autoConnect: false`, only call wallet methods from `onClick` handlers |
-| Modal pops up instead of MWA | `WalletModalProvider` intercepts before MWA fires | Check for MWA first, only fall through to modal on desktop |
-| `wallet-standard-mobile@0.5.0-beta2` build fails | `startScenario` export missing in protocol package | Pin to `@0.4.4` for React 18 apps, or use latest for React 19 |
-| `@solana-mobile/wallet-adapter-mobile` conflicts | Deprecated package registers MWA twice | Remove it — `wallet-standard-mobile` replaces it entirely |
-| Double sign prompts | Both button component and page component call `signMessage` | Pick one location for sign logic |
+| Framework | Next.js | 15.x |
+| Wallet Adapter | `@solana/wallet-adapter-react` | ≥ 0.15.36 |
+| MWA Standard | `@solana-mobile/wallet-standard-mobile` | 0.4.x |
+| TWA Packaging | `@nicolo-ribaudo/bubblewrap` | CLI |
+| Bottom Sheet | `vaul` | — |
+| Styling | Tailwind CSS | 4.x |
 
-### Solis Integration — What Changed
+### Version Requirements
 
-The SeekerDroid MWA pattern was integrated into [Solis](https://github.com/deFiFello/solis-icm-directory) — a production trading platform on Solana mainnet. See [screenshots above](#solis-integration-path-b).
-
-**What changed in Solis to enable MWA:**
-
-1. Added `registerMwa()` in `SolanaProvider.tsx` (5 lines)
-2. Set `autoConnect: false` (1 line)
-3. Created `useConnect` hook that checks for MWA before falling back to the desktop modal (15 lines)
-4. Replaced `setVisible(true)` calls with `triggerConnect()` in Header and Swap page (3 lines each)
-5. Removed deprecated `@solana-mobile/wallet-adapter-mobile` package
-6. Added `MobileWalletSheet.tsx` — the SeekerDroid bottom-sheet component adapted to Solis's design system. Replaces the broken mobile dropdown with a Vaul drawer for connect, address display, copy, Solscan link, and disconnect. Only renders on Android Chrome — desktop users keep their existing UI.
-
-Total diff: ~180 lines added across 5 files. Desktop experience unchanged — mobile gets the native bottom-sheet UX.
+- `@solana/wallet-adapter-react` must be `>= 0.15.36` to fix the [No connect after selecting MWA](https://github.com/solana-mobile/mobile-wallet-adapter/issues/1086) bug.
+- `@solana-mobile/wallet-standard-mobile` is the recommended web library going forward. The legacy `@solana-mobile/wallet-adapter-mobile` is deprecated.
 
 ---
 
-## Project Structure
+## Wallet Compatibility (Tested on Seeker)
 
-```
-├── src/
-│   ├── app/
-│   │   ├── layout.tsx          # Root layout, viewport config, SolanaProvider wrapper
-│   │   ├── page.tsx            # Main screen with verify flow
-│   │   └── globals.css         # Tailwind v4
-│   └── components/
-│       ├── SolanaProvider.tsx   # MWA registration + wallet context (autoConnect: false)
-│       └── WalletButton.tsx    # MWA-first connect, bottom-sheet fallback
-├── public/
-│   ├── manifest.json           # PWA manifest with local icons
-│   ├── icons/                  # App icons (192, 512, maskable variants)
-│   ├── favicon.ico
-│   └── .well-known/
-│       └── assetlinks.json     # Digital Asset Links for TWA verification
-├── twa-manifest.json           # Bubblewrap CLI config
-├── build.gradle                # Generated TWA build script
-└── package.json
-```
+| Wallet | MWA Connect | Sign Message | Sign Transaction |
+|---|---|---|---|
+| Seed Vault | ✅ | ✅ | ✅ |
+| Phantom | ✅ | ✅ | ✅ |
+| Solflare | ✅ | — | — |
 
 ---
 
-## Key Technical Decisions
+## Known Issues
 
-### Why `autoConnect: false`?
-
-MWA on Android Chrome requires all wallet interactions to originate from a **user gesture** (tap, click). Setting `autoConnect: true` causes the wallet adapter to attempt connection on page load inside a `useEffect`, which Android blocks as an untrusted navigation. This is the most common source of the "We can't find a wallet" error.
-
-### Why no `WalletModalProvider`?
-
-The default `@solana/wallet-adapter-react-ui` modal is designed for desktop browsers with many wallet extensions. On Android, MWA is typically the only option. SeekerDroid replaces the modal with a bottom-sheet drawer that only appears when MWA isn't available, and directly connects to MWA when it is — eliminating an unnecessary tap.
-
-For apps that need to keep `WalletModalProvider` (e.g., they already have desktop users), the `useConnect` hook pattern demonstrated in the Solis integration bypasses the modal on Android while preserving it on desktop.
-
-### Why `signMessage` isn't called in `useEffect`?
-
-Android Chrome's [trusted event policy](https://developer.chrome.com/docs/android/intents) blocks MWA intent navigation from programmatic triggers. Even wrapping `signMessage` in a `setTimeout` inside a `useEffect` doesn't count as a user gesture. The only reliable pattern is calling it from a direct `onClick` handler.
-
-### Why separate `any` and `maskable` icons?
-
-Android applies different cropping to maskable icons (circular safe zone). Combining `"purpose": "any maskable"` on a single icon causes the regular icon to be cropped incorrectly on some launchers. SeekerDroid provides dedicated entries for each purpose.
-
-### Why delete `app/` after `bubblewrap build`?
-
-Bubblewrap generates an Android project with an `app/` module directory at the project root. Next.js App Router interprets any root-level `app/` directory as the application routes, ignoring `src/app/` entirely. This causes the build to output only a 404 page with no actual routes. The fix is simple: `rm -rf app/` after building the APK.
+- **Seed Vault deep-link hang:** Seed Vault's intent return can stall in TWA contexts. The 8-second timeout in `WalletButton.tsx` auto-recovers. This is a device-level issue, not app code.
+- **"Could not verify request" warning:** Normal for new domains on first sign. User must manually confirm. Goes away once the domain is trusted.
+- **Wallet chooser redirect:** Multiple installed wallets trigger Android's "Open with" chooser. Expected behavior — user picks their preferred wallet.
 
 ---
 
-## Compatibility
+## Bounty: Solana Mobile PWA Improved ($5,000 USDC)
 
-| Environment | Status | Notes |
-|---|---|---|
-| Solana Seeker | ✅ | Primary target — tested with Seed Vault |
-| Android + Chrome | ✅ | Any Android device with a Solana wallet |
-| Android + Firefox/Brave | ❌ | MWA requires Chrome intents |
-| iOS | ❌ | MWA is Android-only |
-| Desktop browsers | ⚠️ | UI renders but MWA connect is unavailable |
+This project targets the **Solana Mobile PWA Improved** bounty.
 
----
-
-## Troubleshooting
-
-### "We can't find a wallet" error
-
-**Cause:** Wallet interaction triggered without a user gesture — usually `signMessage` or `connect` called from `useEffect`, `setTimeout`, or `autoConnect`.
-
-**Fix:** Ensure all wallet calls originate from a direct `onClick` handler. Set `autoConnect: false`. Never call `signMessage` from an effect.
-
-### "Could not verify request" trust warning on sign prompt
-
-**Expected behavior.** This appears for domains that haven't been added to the wallet's trusted list yet. The user taps "Confirm" to proceed. Once trusted, it won't appear again for that domain.
-
-### Wallet connects but immediately disconnects on refresh
-
-**Cause:** MWA authorization cache is being cleared between sessions.
-
-**Fix:** `@solana-mobile/wallet-standard-mobile` handles caching via `createDefaultAuthorizationCache()`. If you're using a custom provider setup, ensure the cache is passed to `registerMwa()`.
-
-### TWA shows browser address bar instead of full-screen
-
-**Cause:** Digital Asset Links verification failed.
-
-**Fix:** Ensure `public/.well-known/assetlinks.json` is deployed and contains the correct SHA-256 fingerprint matching your signing keystore. Verify it's accessible at `https://yourdomain/.well-known/assetlinks.json`. Use [Google's Asset Links Tester](https://developers.google.com/digital-asset-links/tools/generator) to validate.
-
-### `bubblewrap build` breaks Next.js — only 404 page renders
-
-**Cause:** Bubblewrap creates an `app/` directory at project root that conflicts with Next.js App Router's `src/app/`.
-
-**Fix:** After building the APK, delete the directory: `rm -rf app/`
-
-### MWA modal pops up instead of direct connect (existing apps with `WalletModalProvider`)
-
-**Cause:** `WalletModalProvider` intercepts the connect flow before MWA can fire.
-
-**Fix:** Use the `useConnect` hook pattern from the [Integration Guide](#integration-guide-adding-mwa-to-an-existing-app-path-b) — check for MWA availability first, only fall through to `setVisible(true)` on desktop.
-
-### `wallet-standard-mobile@latest` fails to build with React 18
-
-**Cause:** Version `0.5.0-beta2` depends on a `startScenario` export that doesn't exist in the stable protocol package.
-
-**Fix:** Pin to `@solana-mobile/wallet-standard-mobile@0.4.4` for React 18 projects. React 19 / Next.js 15 projects can use latest.
+**Deliverables met:**
+- Sample highly mobile-optimized PWA using Bubblewrap CLI ✅
+- Improved splash screen styling ✅
+- Default to Chrome browser, fall back to system default (`customtabs` fallback) ✅
+- Mobile-intuitive navigation and layouts (bottom-sheet UX, safe areas, touch targets) ✅
+- Tested on Seeker hardware with Seed Vault + Phantom ✅
+- Second app (Solis) wrapped as proof of template reusability ✅
 
 ---
 
-## Performance
+## License
 
-SeekerDroid is optimized for mobile-first delivery:
-
-- **Static export** — all pages prerendered at build time, no server-side rendering required
-- **First Load JS: 157 kB** — well under the 200 kB mobile budget for interactive time
-- **Service worker** — aggressive frontend nav caching via `@ducanh2912/next-pwa` for offline-capable PWA behavior
-- **Single-screen layout** — no route transitions or lazy-loaded chunks; the entire app is interactive on first paint
-- **No external font requests** — Inter loaded via `next/font` with `display: swap`
-- **Viewport-fit: cover** — uses `100dvh` and safe area insets for correct mobile viewport sizing without scroll bounce
+MIT
 
 ---
 
-## Bounty Deliverables
-
-This project targets the **Solana Mobile PWA Improved** bounty ($5,000 USDC):
-
-| Requirement | Implementation |
-|---|---|
-| Sample PWA using Bubblewrap CLI/template | Next.js 15 PWA with complete `twa-manifest.json`, Gradle build pipeline, signed APK/AAB output |
-| Improved splash screen styling | Custom branded icons (regular + maskable), consistent `#000000` theming across both manifests, 300ms fade-out |
-| Default to Chrome browser, fall back to system default | `"fallbackType": "customtabs"` in TWA config |
-| Mobile-intuitive navigation and layouts | Bottom-sheet wallet drawer, safe area handling, touch feedback, single-screen viewport layout, MWA-first connect flow |
-| MWA reliability | Wallet Standard library, user-initiated actions only, no `autoConnect`, proper trusted event compliance |
+Built by [@deFiFello](https://github.com/deFiFello) for the Solana Mobile ecosystem.| MWA reliability | Wallet Standard library, user-initiated actions only, no `autoConnect`, proper trusted event compliance |
 | **Proof of reusability** | MWA pattern integrated into [Solis](https://github.com/deFiFello/solis-icm-directory) (Path B) — a production trading app with 14 assets, Jupiter swaps, and ZK privacy. ~30 lines across 4 files. |
 
 ---
