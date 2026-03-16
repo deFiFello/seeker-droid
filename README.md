@@ -1,8 +1,12 @@
 # SeekerDroid
 
-**The production-ready PWA → dApp Store template for Solana Seeker.**
+**A starter template AND integration guide for shipping Solana PWAs to the dApp Store.**
 
-A mobile-optimized Next.js 15 Progressive Web App with Trusted Web Activity (TWA) packaging, built specifically for the Solana Mobile dApp Store. SeekerDroid demonstrates the complete pipeline from web app to installable Android APK using Bubblewrap CLI, with reliable Mobile Wallet Adapter (MWA) integration and mobile-native UX patterns.
+SeekerDroid gives you two things:
+
+1. **A ready-to-ship PWA template** — clone it, replace the demo content, deploy to Vercel, package with Bubblewrap, submit to the dApp Store. MWA, TWA, icons, manifests, asset links — all configured.
+
+2. **A drop-in MWA integration pattern** — already have a Solana web app? Copy the `registerMwa()` + `useConnect` hook pattern into your existing project. ~30 lines of code to make any Solana web app work reliably on Seeker hardware. We proved this by integrating it into [Solis](https://github.com/deFiFello/solis-icm-directory) — a production trading platform with 14 assets and live Jupiter swaps.
 
 [![Get it on Solana dApp Store](docs/dapp-store-badge.png)](https://seeker-droid.vercel.app)
 
@@ -10,7 +14,35 @@ A mobile-optimized Next.js 15 Progressive Web App with Trusted Web Activity (TWA
 
 ---
 
+## Two Ways to Use This
+
+### Path A: Start a New Solana PWA
+
+```bash
+git clone https://github.com/deFiFello/seeker-droid.git my-dapp
+cd my-dapp
+npm install
+```
+
+You get: Next.js 15 app with MWA wallet connect, bottom-sheet UI, TWA packaging, Bubblewrap build pipeline, Digital Asset Links, branded splash screen, and service worker — all working out of the box. Replace `page.tsx` with your app logic.
+
+### Path B: Add MWA to Your Existing Web App
+
+Don't need the template? Just grab the pattern. Three changes to any Solana web app:
+
+```bash
+npm install @solana-mobile/wallet-standard-mobile
+```
+
+Then add `registerMwa()` to your provider, set `autoConnect: false`, and use the `useConnect` hook to bypass the desktop modal on Android. Full guide with code examples: [Integration Guide →](#integration-guide-adding-mwa-to-an-existing-app)
+
+We tested Path B on **[Solis](https://solis-tokenized-markets.vercel.app)** — a live trading app with Jupiter swaps, ZK privacy, and 14 tokenized assets. The integration took ~30 lines across 4 files. Screenshots below.
+
+---
+
 ## Screenshots
+
+### SeekerDroid Template (Path A)
 
 <p align="center">
   <img src="docs/screenshot-connected.png" width="280" alt="Connected state with MWA" />
@@ -20,6 +52,20 @@ A mobile-optimized Next.js 15 Progressive Web App with Trusted Web Activity (TWA
 
 <p align="center">
   <em>Left: Wallet connected via MWA — Right: Identity verified with on-device signMessage</em>
+</p>
+
+### Solis Integration (Path B)
+
+<p align="center">
+  <img src="docs/solis-swap-disconnected.png" width="220" alt="Solis before connect" />
+  &nbsp;
+  <img src="docs/solis-mwa-connect.png" width="220" alt="MWA triggers Seed Vault" />
+  &nbsp;
+  <img src="docs/solis-swap-connected.png" width="220" alt="Solis connected with balances" />
+</p>
+
+<p align="center">
+  <em>Same MWA pattern, dropped into a production trading app. ~30 lines changed.</em>
 </p>
 
 ---
@@ -72,7 +118,7 @@ SeekerDroid solves all of these and serves as a copy-paste starting point for an
 
 ---
 
-## Quick Start
+## Quick Start (Path A: New PWA)
 
 ### Prerequisites
 
@@ -129,9 +175,23 @@ bubblewrap build
 
 This produces `app-release-signed.apk` and `app-release-bundle.aab` ready for dApp Store submission.
 
+### 5. Sideload and Test the TWA on Seeker
+
+```bash
+# Connect your Seeker via USB with developer mode enabled
+adb install app-release-signed.apk
+```
+
+Or transfer the APK to your device and open it from a file manager. On first launch:
+
+1. The TWA splash screen appears (black background with cube icon)
+2. The app opens in full-screen trusted mode (no browser bar) if Digital Asset Links are verified
+3. Tapping "Connect" triggers MWA → Seed Vault directly
+4. The app behaves identically to the PWA but runs as a native Android app with its own launcher icon
+
 ---
 
-## Integration Guide: Adding MWA to an Existing App
+## Integration Guide: Adding MWA to an Existing App (Path B)
 
 SeekerDroid's MWA pattern was tested on **[Solis](https://solis-tokenized-markets.vercel.app)** — a production Solana trading platform with Jupiter swaps, PrivacyCash ZK privacy, and 14 tokenized assets. Here's how the integration works and the pitfalls we solved.
 
@@ -189,31 +249,9 @@ const handleConnect = async () => {
 | `@solana-mobile/wallet-adapter-mobile` conflicts | Deprecated package registers MWA twice | Remove it — `wallet-standard-mobile` replaces it entirely |
 | Double sign prompts | Both button component and page component call `signMessage` | Pick one location for sign logic |
 
-### Solis Integration — Proof on Seeker Hardware
+### Solis Integration — What Changed
 
-The SeekerDroid MWA pattern was integrated into Solis's early access branch. The following screenshots show it working on a Solana Seeker device:
-
-<p align="center">
-  <img src="docs/solis-swap-disconnected.png" width="220" alt="Solis swap — disconnected" />
-  &nbsp;
-  <img src="docs/solis-mwa-connect.png" width="220" alt="MWA Seed Vault connect" />
-  &nbsp;
-  <img src="docs/solis-seed-vault.png" width="220" alt="Seed Vault wallet chooser" />
-</p>
-
-<p align="center">
-  <em>Left: Swap page before connect — Center: MWA triggers Seed Vault directly — Right: Wallet selection via Seed Vault</em>
-</p>
-
-<p align="center">
-  <img src="docs/solis-swap-connected.png" width="220" alt="Solis swap — connected with balances" />
-  &nbsp;
-  <img src="docs/solis-scroll-connected.png" width="220" alt="Solis connected — scrolled view" />
-</p>
-
-<p align="center">
-  <em>Left: Connected with live balances — Right: Full swap interface with fee structure</em>
-</p>
+The SeekerDroid MWA pattern was integrated into [Solis](https://github.com/deFiFello/solis-icm-directory) — a production trading platform on Solana mainnet. See [screenshots above](#solis-integration-path-b).
 
 **What changed in Solis to enable MWA:**
 
@@ -289,6 +327,63 @@ Bubblewrap generates an Android project with an `app/` module directory at the p
 
 ---
 
+## Troubleshooting
+
+### "We can't find a wallet" error
+
+**Cause:** Wallet interaction triggered without a user gesture — usually `signMessage` or `connect` called from `useEffect`, `setTimeout`, or `autoConnect`.
+
+**Fix:** Ensure all wallet calls originate from a direct `onClick` handler. Set `autoConnect: false`. Never call `signMessage` from an effect.
+
+### "Could not verify request" trust warning on sign prompt
+
+**Expected behavior.** This appears for domains that haven't been added to the wallet's trusted list yet. The user taps "Confirm" to proceed. Once trusted, it won't appear again for that domain.
+
+### Wallet connects but immediately disconnects on refresh
+
+**Cause:** MWA authorization cache is being cleared between sessions.
+
+**Fix:** `@solana-mobile/wallet-standard-mobile` handles caching via `createDefaultAuthorizationCache()`. If you're using a custom provider setup, ensure the cache is passed to `registerMwa()`.
+
+### TWA shows browser address bar instead of full-screen
+
+**Cause:** Digital Asset Links verification failed.
+
+**Fix:** Ensure `public/.well-known/assetlinks.json` is deployed and contains the correct SHA-256 fingerprint matching your signing keystore. Verify it's accessible at `https://yourdomain/.well-known/assetlinks.json`. Use [Google's Asset Links Tester](https://developers.google.com/digital-asset-links/tools/generator) to validate.
+
+### `bubblewrap build` breaks Next.js — only 404 page renders
+
+**Cause:** Bubblewrap creates an `app/` directory at project root that conflicts with Next.js App Router's `src/app/`.
+
+**Fix:** After building the APK, delete the directory: `rm -rf app/`
+
+### MWA modal pops up instead of direct connect (existing apps with `WalletModalProvider`)
+
+**Cause:** `WalletModalProvider` intercepts the connect flow before MWA can fire.
+
+**Fix:** Use the `useConnect` hook pattern from the [Integration Guide](#integration-guide-adding-mwa-to-an-existing-app-path-b) — check for MWA availability first, only fall through to `setVisible(true)` on desktop.
+
+### `wallet-standard-mobile@latest` fails to build with React 18
+
+**Cause:** Version `0.5.0-beta2` depends on a `startScenario` export that doesn't exist in the stable protocol package.
+
+**Fix:** Pin to `@solana-mobile/wallet-standard-mobile@0.4.4` for React 18 projects. React 19 / Next.js 15 projects can use latest.
+
+---
+
+## Performance
+
+SeekerDroid is optimized for mobile-first delivery:
+
+- **Static export** — all pages prerendered at build time, no server-side rendering required
+- **First Load JS: 157 kB** — well under the 200 kB mobile budget for interactive time
+- **Service worker** — aggressive frontend nav caching via `@ducanh2912/next-pwa` for offline-capable PWA behavior
+- **Single-screen layout** — no route transitions or lazy-loaded chunks; the entire app is interactive on first paint
+- **No external font requests** — Inter loaded via `next/font` with `display: swap`
+- **Viewport-fit: cover** — uses `100dvh` and safe area insets for correct mobile viewport sizing without scroll bounce
+
+---
+
 ## Bounty Deliverables
 
 This project targets the **Solana Mobile PWA Improved** bounty ($5,000 USDC):
@@ -300,7 +395,7 @@ This project targets the **Solana Mobile PWA Improved** bounty ($5,000 USDC):
 | Default to Chrome browser, fall back to system default | `"fallbackType": "customtabs"` in TWA config |
 | Mobile-intuitive navigation and layouts | Bottom-sheet wallet drawer, safe area handling, touch feedback, single-screen viewport layout, MWA-first connect flow |
 | MWA reliability | Wallet Standard library, user-initiated actions only, no `autoConnect`, proper trusted event compliance |
-| **Proof of integration** | MWA pattern tested on [Solis](https://solis-tokenized-markets.vercel.app) — a production trading app with 14 assets, Jupiter swaps, and ZK privacy |
+| **Proof of reusability** | MWA pattern integrated into [Solis](https://github.com/deFiFello/solis-icm-directory) (Path B) — a production trading app with 14 assets, Jupiter swaps, and ZK privacy. ~30 lines across 4 files. |
 
 ---
 
