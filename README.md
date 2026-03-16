@@ -28,15 +28,15 @@ You get: Next.js 15 app with MWA wallet connect, bottom-sheet UI, TWA packaging,
 
 ### Path B: Add MWA to Your Existing Web App
 
-Don't need the template? Just grab the pattern. Three changes to any Solana web app:
+Don't need the template? Grab the pattern. Four things to add to any Solana web app:
 
 ```bash
-npm install @solana-mobile/wallet-standard-mobile
+npm install @solana-mobile/wallet-standard-mobile vaul
 ```
 
-Then add `registerMwa()` to your provider, set `autoConnect: false`, and use the `useConnect` hook to bypass the desktop modal on Android. Full guide with code examples: [Integration Guide →](#integration-guide-adding-mwa-to-an-existing-app)
+Then add `registerMwa()` to your provider, set `autoConnect: false`, use the `useConnect` hook to bypass the desktop modal on Android, and drop in `MobileWalletSheet.tsx` for touch-native wallet management. Full guide: [Integration Guide →](#integration-guide-adding-mwa-to-an-existing-app-path-b)
 
-We tested Path B on **[Solis](https://solis-tokenized-markets.vercel.app)** — a live trading app with Jupiter swaps, ZK privacy, and 14 tokenized assets. The integration took ~30 lines across 4 files. Screenshots below.
+We tested Path B on **[Solis](https://solis-tokenized-markets.vercel.app)** — a live trading app with Jupiter swaps, ZK privacy, and 14 tokenized assets. Screenshots below.
 
 ---
 
@@ -54,19 +54,37 @@ We tested Path B on **[Solis](https://solis-tokenized-markets.vercel.app)** — 
   <em>Left: Wallet connected via MWA — Right: Identity verified with on-device signMessage</em>
 </p>
 
-### Solis Integration (Path B)
+### Solis Integration (Path B) — Full MWA Flow on Seeker Hardware
+
+The SeekerDroid pattern was integrated into [Solis](https://github.com/deFiFello/solis-icm-directory), a production trading platform with 14 tokenized assets, Jupiter swaps, and ZK-shielded privacy swaps. Here's the complete user flow on a Solana Seeker:
+
+**Step 1: Tap Connect → MWA fires directly (no desktop modal)**
 
 <p align="center">
-  <img src="docs/solis-swap-disconnected.png" width="220" alt="Solis before connect" />
+  <img src="docs/solis-disconnected.png" width="220" alt="Step 1: Swap page before connect" />
   &nbsp;
-  <img src="docs/solis-mwa-connect.png" width="220" alt="MWA triggers Seed Vault" />
+  <img src="docs/solis-seed-vault-connect.png" width="220" alt="Step 2: Seed Vault connect prompt" />
   &nbsp;
-  <img src="docs/solis-swap-connected.png" width="220" alt="Solis connected with balances" />
+  <img src="docs/solis-seed-vault-select.png" width="220" alt="Step 3: Select wallet account" />
 </p>
 
 <p align="center">
-  <em>Same MWA pattern, dropped into a production trading app. ~30 lines changed.</em>
+  <em>Tapping "Connect" triggers MWA → Seed Vault opens → user picks their wallet account. No modal, no extra taps.</em>
 </p>
+
+**Step 2: Connected → Bottom-sheet wallet management**
+
+<p align="center">
+  <img src="docs/solis-swap-connected.png" width="220" alt="Step 4: Connected with live balances" />
+  &nbsp;
+  <img src="docs/solis-bottom-sheet.png" width="220" alt="Step 5: Bottom-sheet wallet drawer" />
+</p>
+
+<p align="center">
+  <em>Once connected, tapping the address opens the SeekerDroid bottom-sheet — Copy Address, View on Solscan, Disconnect. All swipeable, all touch-native.</em>
+</p>
+
+**What the bottom sheet replaces:** On desktop, wallet-adapter-react-ui shows a dropdown menu. On mobile, dropdowns are unreliable — they close on touch, can't be swiped, and fight with scroll. The SeekerDroid bottom sheet (powered by Vaul) is the native Android interaction pattern — it slides up, can be swiped down to dismiss, and has large touch targets. This is the same UX that Phantom, Jupiter, and native Android apps use.
 
 ---
 
@@ -239,6 +257,14 @@ const handleConnect = async () => {
 };
 ```
 
+**4. Replace mobile wallet UI with a bottom sheet**
+
+Desktop dropdowns break on mobile — they close on touch events, can't be swiped, and fight with scroll. Copy `MobileWalletSheet.tsx` from the SeekerDroid template (or from the [Solis integration](https://github.com/deFiFello/solis-icm-directory/blob/main/src/components/MobileWalletSheet.tsx)) into your project. It uses [Vaul](https://github.com/emilkowalski/vaul) to render a swipeable bottom drawer for wallet connect, address display, and disconnect — only on Android. Desktop users keep their existing UI.
+
+```bash
+npm install vaul
+```
+
 ### Common Pitfalls (Solved)
 
 | Issue | Cause | Fix |
@@ -260,8 +286,9 @@ The SeekerDroid MWA pattern was integrated into [Solis](https://github.com/deFiF
 3. Created `useConnect` hook that checks for MWA before falling back to the desktop modal (15 lines)
 4. Replaced `setVisible(true)` calls with `triggerConnect()` in Header and Swap page (3 lines each)
 5. Removed deprecated `@solana-mobile/wallet-adapter-mobile` package
+6. Added `MobileWalletSheet.tsx` — the SeekerDroid bottom-sheet component adapted to Solis's design system. Replaces the broken mobile dropdown with a Vaul drawer for connect, address display, copy, Solscan link, and disconnect. Only renders on Android Chrome — desktop users keep their existing UI.
 
-Total diff: ~30 lines changed across 4 files. No UI redesign needed.
+Total diff: ~180 lines added across 5 files. Desktop experience unchanged — mobile gets the native bottom-sheet UX.
 
 ---
 
