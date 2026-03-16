@@ -1,49 +1,99 @@
 'use client';
+
 import type { WalletName } from '@solana/wallet-adapter-base';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { SolanaMobileWalletAdapterWalletName } from '@solana-mobile/wallet-standard-mobile';
 import { Drawer } from 'vaul';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import Image from 'next/image';
 
+// Timeout (ms) before we consider an MWA connection attempt failed.
+// Seed Vault deep-link returns can hang indefinitely in TWA contexts.
+const MWA_CONNECT_TIMEOUT = 8000;
+
 export default function WalletButton() {
-  const { publicKey, connected, disconnect, connect, select, wallet, wallets, connecting } = useWallet();
+  const { publicKey, connected, disconnect, connect, select, wallet, wallets, connecting } =
+    useWallet();
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [connectAttempted, setConnectAttempted] = useState(false);
+  const connectingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     queueMicrotask(() => setMounted(true));
   }, []);
 
-  // Direct connect handler following MWA UX Guidelines:
+  // ─── Timeout: auto-recover from stuck Seed Vault / MWA connections ───
+  useEffect(() => {
+    if (connecting) {
+      connectingTimer.current = setTimeout(() => {
+        console.warn('[SeekerDroid] MWA connection timed out — resetting');
+        disconnect().catch(() => {});
+        setConnectAttempted(false);
+      }, MWA_CONNECT_TIMEOUT);
+    } else {
+      // Connection resolved (success or user cancelled) — clear timer
+      if (connectingTimer.current) {
+        clearTimeout(connectingTimer.current);
+        connectingTimer.current = null;
+      }
+    }
+    return () => {
+      if (connectingTimer.current) {
+        clearTimeout(connectingTimer.current);
+      }
+    };
+  }, [connecting, disconnect]);
+
+  // ─── Direct connect handler (MWA UX Guidelines) ───
   // 1. If MWA is already selected → call connect() immediately
-  // 2. If MWA is available but not selected → select it (triggers connect)
+  // 2. If MWA is available but not selected → select it
   // 3. Otherwise → show wallet picker drawer
   const handleConnect = useCallback(async () => {
+    setConnectAttempted(true);
+
     const mwaWallet = wallets.find(
-      (w) => w.adapter.name === SolanaMobileWalletAdapterWalletName
+      (w) => w.adapter.name === SolanaMobileWalletAdapterWalletName,
     );
 
     if (wallet?.adapter.name === SolanaMobileWalletAdapterWalletName) {
-      // MWA is selected — connect directly from this user tap
+      // MWA already selected — connect directly from this user tap
       try {
         await connect();
       } catch (e) {
-        console.error('MWA connect failed:', e);
+        console.error('[SeekerDroid] MWA connect failed:', e);
+        setConnectAttempted(false);
       }
     } else if (mwaWallet) {
-      // MWA is available but not selected — select it
-      select(SolanaMobileWalletAdapterWalletName as WalletName);    } else {
-      // Desktop or no MWA — show wallet picker
+      // MWA available but not selected — select it, then connect
+      select(SolanaMobileWalletAdapterWalletName as WalletName);
+      // connect() will fire on next tick once selection registers
+      setTimeout(async () => {
+        try {
+          await connect();
+        } catch (e) {
+          console.error('[SeekerDroid] MWA connect after select failed:', e);
+          setConnectAttempted(false);
+        }
+      }, 150);
+    } else {
+      // Desktop or no MWA detected — show wallet picker
+      setConnectAttempted(false);
       setOpen(true);
     }
   }, [wallet, wallets, connect, select]);
+
+  // ─── Cancel a stuck connection ───
+  const handleCancelConnect = useCallback(() => {
+    disconnect().catch(() => {});
+    setConnectAttempted(false);
+  }, [disconnect]);
 
   if (!mounted) {
     return <div className="h-10 w-32 bg-zinc-900/20 rounded-full animate-pulse" />;
   }
 
-  // STATE: CONNECTED
+  // ─── STATE: CONNECTED ───
   if (connected && publicKey) {
     return (
       <button
@@ -58,19 +108,20 @@ export default function WalletButton() {
     );
   }
 
-  // STATE: CONNECTING
+  // ─── STATE: CONNECTING (tappable — lets user cancel stuck attempts) ───
   if (connecting) {
     return (
       <button
-        disabled
-        className="bg-zinc-900 border border-zinc-800 text-zinc-500 px-6 py-2 rounded-full text-sm font-bold animate-pulse"
+        onClick={handleCancelConnect}
+        className="bg-zinc-900 border border-zinc-800 text-zinc-400 px-6 py-2 rounded-full text-sm font-bold animate-pulse active:scale-95 transition-transform"
+        title="Tap to cancel"
       >
         Connecting…
       </button>
     );
   }
 
-  // STATE: DISCONNECTED
+  // ─── STATE: DISCONNECTED ───
   return (
     <Drawer.Root open={open} onOpenChange={setOpen}>
       {/* Primary connect button — tries MWA first, falls back to drawer */}
@@ -108,14 +159,14 @@ export default function WalletButton() {
                       onClick={async () => {
                         select(w.adapter.name);
                         setOpen(false);
-                        // Small delay to let selection register, then connect
+                        // Small delay for selection to register, then connect
                         setTimeout(async () => {
                           try {
                             await connect();
                           } catch (e) {
-                            console.error('Connect failed:', e);
+                            console.error('[SeekerDroid] Connect failed:', e);
                           }
-                        }, 100);
+                        }, 150);
                       }}
                     >
                       <div className="flex items-center gap-3">
